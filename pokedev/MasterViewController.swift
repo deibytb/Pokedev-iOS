@@ -49,8 +49,21 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
                     if let id = json["id"] as? Int {
                         if let name = json["name"] as? String {
                             print(id, name)
-                            let newPokemon = Pokemon(id: id, name: name)
-                            self.pokemons.append(newPokemon)
+                            
+                            let entityDescription = NSEntityDescription.entityForName("Pokemon", inManagedObjectContext: self.managedObjectContext!)
+                            let newPokemon = NSManagedObject(entity: entityDescription!, insertIntoManagedObjectContext: self.managedObjectContext)
+                            
+                            newPokemon.setValue(id, forKey: "id")
+                            newPokemon.setValue(name, forKey: "name")
+                            
+                            do {
+                                try newPokemon.managedObjectContext?.save()
+                            } catch {
+                                print(error)
+                            }
+                            
+                            let poke = Pokemon(id: id, name: name)
+                            self.pokemons.append(poke)
                             self.tableView.reloadData()
                         }
                     }
