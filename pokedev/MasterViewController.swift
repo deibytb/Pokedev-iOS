@@ -26,6 +26,28 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
             let controllers = split.viewControllers
             self.detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
         }
+        
+        let requestURL: NSURL = NSURL(string: "http://pokeapi.co/api/v2/pokemon/1")!
+        let urlRequest: NSMutableURLRequest = NSMutableURLRequest(URL: requestURL)
+        let session = NSURLSession.sharedSession()
+        let task = session.dataTaskWithRequest(urlRequest) {
+            (data, response, error) -> Void in
+            let httpResponse = response as! NSHTTPURLResponse
+            let statusCode = httpResponse.statusCode
+            if (statusCode == 200) {
+                do{
+                    let json = try NSJSONSerialization.JSONObjectWithData(data!, options:.AllowFragments)
+                    if let id = json["id"] as? Int {
+                        if let name = json["name"] as? String {
+                            print(id, name)
+                        }
+                    }
+                } catch {
+                    print("Error with Json: \(error)")
+                }
+            }
+        }
+        task.resume()
     }
 
     override func viewWillAppear(animated: Bool) {
