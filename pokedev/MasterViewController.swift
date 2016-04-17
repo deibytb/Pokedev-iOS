@@ -20,14 +20,23 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         // Do any additional setup after loading the view, typically from a nib.
         self.navigationItem.leftBarButtonItem = self.editButtonItem()
 
-        let addButton = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "insertNewObject:")
+        let addButton = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: #selector(MasterViewController.insertNewObject(_:)))
         self.navigationItem.rightBarButtonItem = addButton
         if let split = self.splitViewController {
             let controllers = split.viewControllers
             self.detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
         }
         
-        let requestURL: NSURL = NSURL(string: "http://pokeapi.co/api/v2/pokemon/1")!
+        for i in 1...20 {
+            getPokemon(i)
+        }
+        
+    }
+    
+    var pokemons: [Pokemon] = []
+    
+    func getPokemon(number:Int) {
+        let requestURL: NSURL = NSURL(string: "http://pokeapi.co/api/v2/pokemon/\(number)")!
         let urlRequest: NSMutableURLRequest = NSMutableURLRequest(URL: requestURL)
         let session = NSURLSession.sharedSession()
         let task = session.dataTaskWithRequest(urlRequest) {
@@ -40,6 +49,9 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
                     if let id = json["id"] as? Int {
                         if let name = json["name"] as? String {
                             print(id, name)
+                            let newPokemon = Pokemon(id: id, name: name)
+                            self.pokemons.append(newPokemon)
+                            self.tableView.reloadData()
                         }
                     }
                 } catch {
@@ -101,14 +113,12 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     }
 
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let sectionInfo = self.fetchedResultsController.sections![section]
-        return sectionInfo.numberOfObjects
+        return pokemons.count
     }
 
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath)
-        let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! NSManagedObject
-        self.configureCell(cell, withObject: object)
+        cell.textLabel?.text = pokemons[indexPath.row].name
         return cell
     }
 
